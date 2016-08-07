@@ -1,0 +1,210 @@
+
+<!DOCTYPE html>
+<html>
+
+
+    <head>
+        <meta charset=utf-8 />
+        <title>A simple map</title>
+        <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+        <!-- Calendar picker -->
+        <script type="text/javascript" src="//cdn.jsdelivr.net/jquery/1/jquery.min.js"></script>
+        <script type="text/javascript" src="//cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap/latest/css/bootstrap.css" />
+        <!-- Include Date Range Picker -->
+        <script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
+        <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
+        <!-- Mapbox -->
+        <script src='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.js'></script>
+        <link href='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.css' rel='stylesheet' />
+        <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.21.0/mapbox-gl.js'></script>
+        <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.21.0/mapbox-gl.css' rel='stylesheet' />
+        <!-- jquery -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+        <style>
+          body { margin:0; padding:0; }
+          #map { position:absolute; top:0; bottom:0; width:100%; } /*position:absolute; */
+        #datetimepicker { position:absolute; top:30px; left:30px}
+
+        .mapboxgl-popup {
+            max-width: 400px;
+            font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .filter-ctrl {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            z-index: 1;
+            width: 180px;
+        }
+
+        .filter-ctrl input[type=text] {
+            font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            width: 100%;
+            border: 0;
+            background-color: #fff;
+            height: 40px;
+            margin: 0;
+            color: rgba(0,0,0,.5);
+            padding: 10px;
+            box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
+            border-radius: 3px;
+        }
+        </style>
+    </head>
+
+
+    <body>
+
+        <div id='map'></div>
+        <div class='filter-ctrl'>
+            <!-- <form action="/form" method="POST"> -->
+                <input id='filter-input' type='text' name='filter' placeholder='Filter by name' />
+                <!-- <input type="submit" value="Submit"> -->
+            <!-- </form> -->
+        </div>
+
+        <div id="datetimepicker" >
+
+            <!-- <form action="/form" method="POST"> -->
+                <input type=text name=daterange placeholder='2016-06-02 12:00:00 - 2016-06-03 12:00:00' size=40>
+                <input id='submit_daterange' type="button" value="Submit">
+            <!-- </form> -->
+            <!-- <p>
+                <span id=result>?</span>
+            <p> -->
+        </div>
+
+
+
+
+    </body>
+
+    <script>
+        $(document).ready(function() {
+        $('#submit_daterange').click(function() {
+          $.getJSON('/form', {
+            daterange: $('input[name="daterange"]').val(),
+          }, function(data) {
+            var point_places = data.point_geojson
+            var line_places = data.line_geojson
+            // $("#result").text(places);
+            console.log(point_places)
+            map.getSource('point_places').setData(point_places)
+            map.getSource('line_places').setData(line_places)
+
+          });
+          return false;
+        });
+      });
+
+    </script>
+
+    <script type="text/javascript">
+
+    $(function() {
+    $('input[name="daterange"]').daterangepicker({
+        timePicker: true,
+        timePickerIncrement: 30,
+        locale: {
+            format: 'MM/DD/YYYY h:mm A'
+        }
+    });
+});
+    </script>
+
+    <script>
+
+        // L.mapbox.accessToken = 'pk.eyJ1IjoiYWxlZTcxMzUiLCJhIjoiY2lyOGE0eTduMDB5NGdmbTk3aHh4anJpZyJ9.SxUG-jsnrR3BJ60oAnLUQw';
+
+        mapboxgl.accessToken = 'pk.eyJ1IjoiYWxlZTcxMzUiLCJhIjoiY2lyOGE0eTduMDB5NGdmbTk3aHh4anJpZyJ9.SxUG-jsnrR3BJ60oAnLUQw';
+        var layerIDs = []; // will contain a list used to filter against
+        var filterInput = document.getElementById('filter_input'); // gets the user input
+
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v9',
+            center: [-118.2437, 34.0522],
+            zoom: 8
+        });
+
+
+        map.on('load', function() {
+
+            // Add a GeoJSON source containing place coordinates and information
+            // var something = ''
+            // window.alert(something)
+            var point_places = {}
+            var line_places = {}
+
+            map.addSource('point_places',{
+                "type": "geojson",
+                "data": {}
+            });
+            map.addSource('line_places',{
+                "type": "geojson",
+                "data": {}
+            });
+
+            map.addLayer({
+            "id": "line_places",
+            "type": "line",
+            "source": "line_places",
+            "layout": {
+                "line-join": "round",
+                "line-cap": "round"
+            },
+            "paint": {
+                "line-color": "#888",
+                "line-width": 8
+                }
+            });
+
+            map.addLayer({
+            "id": "point_places",
+            "type": "symbol",
+            "source": "point_places",
+            "layout": {
+                "icon-image": "car-15",
+                "icon-size": 2
+                }
+            });
+
+
+        })
+
+        // When a click event occurs near a place, open a popup at the location of
+        // the feature, with description HTML from its properties.
+        map.on('click', function (e) {
+            // the 2nd argument restricts features to places layer
+            var features = map.queryRenderedFeatures(e.point, { layers: ['point_places'] });
+
+            // if user clicks nothing, we return nothing (no popup)
+            if (!features.length) {
+                return;
+            }
+            // first and only feature
+            var feature = features[0];
+
+            // Populate the popup and set its coordinates
+            // based on the feature found.
+            var popup = new mapboxgl.Popup()
+                .setLngLat(feature.geometry.coordinates)
+                .setHTML(feature.properties.description)
+                .addTo(map);
+        });
+
+        // Use the same approach as above to indicate that the symbols are clickable
+        // by changing the cursor style to 'pointer'.
+        map.on('mousemove', function (e) {
+            var features = map.queryRenderedFeatures(e.point, { layers: ['point_places'] });
+            map.getCanvas().style.cursor = (features.length) ? 'pointer' : '';
+        });
+
+
+    </script>
+
+</html>

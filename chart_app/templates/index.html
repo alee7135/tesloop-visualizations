@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Page Title</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+        <script src="https://code.highcharts.com/stock/highstock.js"></script>
+        <script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+    </head>
+        <style>
+            #submit { position:absolute; top:20px; right:325px}
+        </style>
+
+    <body>
+        <div id="container" style="height: 400px; min-width: 310px"></div>
+        <!-- <input id='submit' type="button" value="Submit"> -->
+    </body>
+
+    <script>
+
+    //  Create the chart when all data is loaded
+
+        $(function () {
+            seriesOptions = [],
+            seriesCounter = 0
+            names = ['battery_range', 'est_battery_range', 'battery_level'];
+
+            function createChart() {
+
+                $('#container').highcharts('StockChart', {
+
+                    rangeSelector: {
+                        selected: 4
+                    },
+                    xAxis:{
+                    events: {
+                        afterSetExtremes:function(event){
+                            console.log('---- Date from Chart Object after setting Extremes');
+                            // start = new Date(event.min)
+                            // end = new Date(event.max)
+                            start = event.min
+                            end = event.max
+                            console.log(start); // new Date(event.min)
+                            console.log(end); // new Date(event.max)
+                            // console.log(starts)
+                            // console.log(ends)
+                        }
+                    },
+                    type: 'datetime'
+                },
+                // Vehicle Range (either estimated or normal range)
+                    yAxis: [{
+                        labels: {
+                            formatter: function () {
+                        return this.value + ' Miles';
+                    }
+                        },
+                        plotLines: [{
+                            value: 0,
+                            width: 2,
+                            color: 'silver'
+                        }],
+                    title: {
+                        text: 'Vehicle Range',
+                        style: {
+                            // color: Highcharts.getOptions().colors[2]
+                        }
+                    },
+                    opposite: false // left side
+                },
+                // Battery State of Charge
+                    {
+                        labels: {
+                            formatter: function () {
+                        return  this.value + ' %';
+                    }
+                        },
+                        plotLines: [{
+                            value: 0,
+                            width: 2,
+                            color: 'silver'
+                        }],
+                    title: {
+                        text: 'Battery State of Charge',
+                        style: {
+                            // color: Highcharts.getOptions().colors[2]
+                        }
+                    },
+                    opposite: true // right side
+                }],
+
+                    plotOptions: {
+                        series: {
+                            // compare: 'percent'
+                        }
+                    },
+
+                    tooltip: {
+                        pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.change}%)<br/>',
+                        valueDecimals: 2
+                    },
+
+                    series: seriesOptions,
+                    scrollbar:{
+                       liveRedraw: false
+                    },
+
+                });
+            }
+            // Reinitialize the global variable
+            seriesCounter = 0
+            // First initialize the chart but it doesnt have real data yet
+            $.getJSON('/input', function(data) {
+
+                var batt_range = data.batt_range
+                var est_batt_range = data.est_batt_range
+                var bb_level = data.bb_level
+
+                // create a data list so we can loop through
+                var data_series = [batt_range, est_batt_range, bb_level]
+                var yAxis_label = [0,0,1]
+                // console.log(batt_range)
+                // console.log(est_batt_range)
+                // console.log(bb_level)
+
+
+                $.each(names, function (i, name) {
+                    seriesOptions[i] = {
+                        name: name,
+                        data: data_series[i],
+                        yAxis: yAxis_label[i]
+// [[1464864960000,23.64],
+// [1464865000000,23.53],
+// [1464869000000,23.26]]
+                    }
+                    // console.log(name)
+                    // console.log(data_series[i])
+                    seriesCounter += 1;
+
+                    if (seriesCounter === names.length) {
+                        createChart();
+                    }
+                })
+        })
+    });
+
+
+        // Load the fonts
+    Highcharts.createElement('link', {
+       href: 'https://fonts.googleapis.com/css?family=Unica+One',
+       rel: 'stylesheet',
+       type: 'text/css'
+    }, null, document.getElementsByTagName('head')[0]);
+
+    Highcharts.theme = {
+       colors: ["#2b908f", "#90ee7e", "#f45b5b", "#7798BF", "#aaeeee", "#ff0066", "#eeaaee",
+          "#55BF3B", "#DF5353", "#7798BF", "#aaeeee"],
+       chart: {
+          backgroundColor: {
+             linearGradient: { x1: 0, y1: 0, x2: 1, y2: 1 },
+             stops: [
+                [0, '#2a2a2b'],
+                [1, '#3e3e40']
+             ]
+          },
+          style: {
+             fontFamily: "'Unica One', sans-serif"
+          },
+          plotBorderColor: '#606063'
+       },
+       title: {
+          style: {
+             color: '#E0E0E3',
+             textTransform: 'uppercase',
+             fontSize: '20px'
+          }
+       },
+       subtitle: {
+          style: {
+             color: '#E0E0E3',
+             textTransform: 'uppercase'
+          }
+       },
+       xAxis: {
+          gridLineColor: '#707073',
+          labels: {
+             style: {
+                color: '#E0E0E3'
+             }
+          },
+          lineColor: '#707073',
+          minorGridLineColor: '#505053',
+          tickColor: '#707073',
+          title: {
+             style: {
+                color: '#A0A0A3'
+
+             }
+          }
+       },
+       yAxis: {
+          gridLineColor: '#707073',
+          labels: {
+             style: {
+                color: '#E0E0E3'
+             }
+          },
+          lineColor: '#707073',
+          minorGridLineColor: '#505053',
+          tickColor: '#707073',
+          tickWidth: 1,
+          title: {
+             style: {
+                color: '#A0A0A3'
+             }
+          }
+       },
+       tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.85)',
+          style: {
+             color: '#F0F0F0'
+          }
+       },
+       plotOptions: {
+          series: {
+             dataLabels: {
+                color: '#B0B0B3'
+             },
+             marker: {
+                lineColor: '#333'
+             }
+          },
+          boxplot: {
+             fillColor: '#505053'
+          },
+          candlestick: {
+             lineColor: 'white'
+          },
+          errorbar: {
+             color: 'white'
+          }
+       },
+       legend: {
+          itemStyle: {
+             color: '#E0E0E3'
+          },
+          itemHoverStyle: {
+             color: '#FFF'
+          },
+          itemHiddenStyle: {
+             color: '#606063'
+          }
+       },
+       credits: {
+          style: {
+             color: '#666'
+          }
+       },
+       labels: {
+          style: {
+             color: '#707073'
+          }
+       },
+
+       drilldown: {
+          activeAxisLabelStyle: {
+             color: '#F0F0F3'
+          },
+          activeDataLabelStyle: {
+             color: '#F0F0F3'
+          }
+       },
+
+       navigation: {
+          buttonOptions: {
+             symbolStroke: '#DDDDDD',
+             theme: {
+                fill: '#505053'
+             }
+          }
+       },
+
+       // scroll charts
+       rangeSelector: {
+          buttonTheme: {
+             fill: '#505053',
+             stroke: '#000000',
+             style: {
+                color: '#CCC'
+             },
+             states: {
+                hover: {
+                   fill: '#707073',
+                   stroke: '#000000',
+                   style: {
+                      color: 'white'
+                   }
+                },
+                select: {
+                   fill: '#000003',
+                   stroke: '#000000',
+                   style: {
+                      color: 'white'
+                   }
+                }
+             }
+          },
+          inputBoxBorderColor: '#505053',
+          inputStyle: {
+             backgroundColor: '#333',
+             color: 'silver'
+          },
+          labelStyle: {
+             color: 'silver'
+          }
+       },
+
+       navigator: {
+          handles: {
+             backgroundColor: '#666',
+             borderColor: '#AAA'
+          },
+          outlineColor: '#CCC',
+          maskFill: 'rgba(255,255,255,0.1)',
+          series: {
+             color: '#7798BF',
+             lineColor: '#A6C7ED'
+          },
+          xAxis: {
+             gridLineColor: '#505053'
+          }
+       },
+
+       scrollbar: {
+          barBackgroundColor: '#808083',
+          barBorderColor: '#808083',
+          buttonArrowColor: '#CCC',
+          buttonBackgroundColor: '#606063',
+          buttonBorderColor: '#606063',
+          rifleColor: '#FFF',
+          trackBackgroundColor: '#404043',
+          trackBorderColor: '#404043'
+       },
+
+       // special colors for some of the
+       legendBackgroundColor: 'rgba(0, 0, 0, 0.5)',
+       background2: '#505053',
+       dataLabelsColor: '#B0B0B3',
+       textColor: '#C0C0C0',
+       contrastTextColor: '#F0F0F3',
+       maskColor: 'rgba(255,255,255,0.3)'
+    };
+
+    // Apply the theme
+    Highcharts.setOptions(Highcharts.theme);
+
+//     // User input
+//     $(document).ready(function() {
+//     $('#submit').click(function() {
+//       $.getJSON('/input', function(data) {
+//         var batt_range = data.batt_range
+//         var est_batt_range = data.est_batt_range
+//         var bb_level = data.bb_level
+//
+//         // create a data list so we can loop through
+//         var data_series = [batt_range, est_batt_range, bb_level]
+//
+//         console.log(batt_range)
+//         console.log(est_batt_range)
+//         console.log(bb_level)
+//
+//         $.each(names, function (i, name) {
+//             seriesOptions[i] = {
+//                 name: name,
+//                 data: [[1451635200000.0,0],
+//                 [1483257600000.0,10]]  // data_series[i]
+// }
+//             seriesCounter += 1;
+//
+//             if (seriesCounter === names.length) {
+//                 createChart();
+//             }
+//         })
+//     });
+//
+//       });
+//       return false;
+//     });
+
+    </script>
+</html>

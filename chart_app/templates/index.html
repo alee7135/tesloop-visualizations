@@ -8,6 +8,12 @@
     </head>
         <style>
             #submit { position:absolute; top:20px; right:325px}
+            .chart {
+                min-width: 320px;
+                max-width: 800px;
+                height: 220px;
+                margin: 0 auto;
+            }
         </style>
 
     <body>
@@ -20,6 +26,38 @@
     //  Create the chart when all data is loaded
 
         $(function () {
+       //
+    //         $('#container').bind('mousemove touchmove touchstart', function (e) {
+    //            var chart,
+    //                point,
+    //                i,
+    //                event;
+    //                    // create the charts
+    //            for (i = 0; i < Highcharts.charts.length; i = i + 1) {
+    //                chart = Highcharts.charts[i];
+    //                event = chart.pointer.normalize(e.originalEvent);
+    //                // Find coordinates within the chart
+    //                point = chart.series[0].searchPoint(event, true);
+    //                // Get the hovered point
+       //
+    //                if (point) {
+    //                    point.highlight(e);
+    //                }
+    //            }
+    //        });
+       //
+    //     Highcharts.Point.prototype.highlight = function (event) {
+    //        this.onMouseOver(); // Show the hover marker
+    //        this.series.chart.tooltip.refresh(this); // Show the tooltip
+    //        this.series.chart.xAxis[0].drawCrosshair(event, this); // Show the crosshair
+    //    };
+       //
+       //
+    //     Highcharts.Pointer.prototype.reset = function () {
+    //         return undefined;
+    //     };
+
+
             seriesOptions = [],
             seriesCounter = 0
             names = ['battery_range', 'est_battery_range', 'battery_level'];
@@ -95,7 +133,7 @@
                     },
 
                     tooltip: {
-                        pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.change}%)<br/>',
+                        pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ', //({point.change}%)<br/>
                         valueDecimals: 2
                     },
 
@@ -126,11 +164,15 @@
                 $.each(names, function (i, name) {
                     seriesOptions[i] = {
                         name: name,
-                        data: data_series[i],
+                        data: data_series[i]
+
+                        // [[1249603200000,30],
+                        // [1464865000000,20],
+                        // [1464869000000,50]]
+
+                        ,
                         yAxis: yAxis_label[i]
-// [[1464864960000,23.64],
-// [1464865000000,23.53],
-// [1464869000000,23.26]]
+
                     }
                     // console.log(name)
                     // console.log(data_series[i])

@@ -18,15 +18,14 @@ def index():
 def input():
     # Takes as input the UTC time, and then I query the database with UTC
     # Return output as PDT
-    start = "1454745600" #request.args.get('start_json',0, type=str)
-    end = "1473231600" #request.args.get('end_json', 0, type=str)
+    start = "1452153600" #request.args.get('start_json',0, type=str)
+    end = "1465282800" #request.args.get('end_json', 0, type=str)
     print 'START: ', start
     print 'END: ', end
     cursor = connect()
     # query sql at UTC but return dates in PDT
-    query = """SELECT ceiling(extract(epoch from timestamp AT TIME ZONE 'PDT'))::int as timestamp_pdt, timestamp AT TIME ZONE 'PDT' as timestamp_real,
-                    drive_state, charge_state, climate_state
-            FROM vehicle_data WHERE extract(epoch from timestamp)>='%s' and extract(epoch from timestamp)<='%s' limit 100""" %(start,end)
+    query = """SELECT ceiling(extract(epoch from timestamp AT TIME ZONE 'PDT'))::int as timestamp_pdt, timestamp AT TIME ZONE 'PDT' AS timestamp_real,drive_state, charge_state, climate_state
+            FROM vehicle_data WHERE extract(epoch from timestamp)>='%s' and extract(epoch from timestamp)<='%s' """ %(start,end)
 
     # select timestamp, extract(epoch from timestamp) as utc_time, timestamp at time zone 'pdt' as timestamp_pdt,
 	# extract(epoch from timestamp at time zone 'pdt')
@@ -37,18 +36,40 @@ def input():
     batt_range = []
     est_batt_range = []
     bb_level = []
+    speed = []
+    charger_actual_current = []
+    charger_pilot_current = []
+    charger_power = []
+    charger_voltage = []
+
     # Loop through the cursor object
     for i in cursor:
-        # print i['timestamp_pdt']
-        batt_range.append([i['timestamp_pdt'], i['charge_state']['battery_range']])
-        est_batt_range.append([i['timestamp_pdt'], i['charge_state']['est_battery_range']])
-        bb_level.append([i['timestamp_pdt'], i['charge_state']['battery_level']])
-        # batt_range.append([int(str(i['timestamp_pdt'])+'000'), i['charge_state']['battery_range']])
-        # est_batt_range.append([int(str(i['timestamp_pdt'])+'000'), i['charge_state']['est_battery_range']])
-        # bb_level.append([int(str(i['timestamp_pdt'])+'000'), i['charge_state']['battery_level']])
 
-    # print est_batt_range
-    return jsonify(batt_range=batt_range, est_batt_range=est_batt_range, bb_level=bb_level)
+        batt_range.append([int(i['timestamp_pdt']*1000), i['charge_state']['battery_range']])
+        est_batt_range.append([int(i['timestamp_pdt']*1000), i['charge_state']['est_battery_range']])
+        bb_level.append([int(i['timestamp_pdt']*1000), i['charge_state']['battery_level']])
+
+        # speed.append([int(i['timestamp_pdt']*1000),
+        # i['drive_state']['speed']])
+        #
+        # charger_actual_current.append([int(i['timestamp_pdt']*1000),
+        # i['charge_state']['charger_actual_current']])
+        # charger_pilot_current.append([int(i['timestamp_pdt']*1000),
+        # i['charge_state']['charger_pilot_current']])
+        # charger_power.append([int(i['timestamp_pdt']*1000),
+        # i['charge_state']['charger_power']])
+        # charger_voltage.append([int(i['timestamp_pdt']*1000),
+        # i['charge_state']['charger_voltage']])
+
+    return jsonify(batt_range=batt_range,est_batt_range=est_batt_range,bb_level=bb_level)
+            #
+            # speed = speed,
+            #
+            # charger_actual_current = charger_actual_current,
+            # charger_pilot_current = charger_pilot_current,
+            # charger_power = charger_power,
+            # charger_voltage = charger_voltage
+
 
 def connect():
     # Define connection string
